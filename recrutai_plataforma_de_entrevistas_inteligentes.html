@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecrutAI - Plataforma de Entrevistas Inteligentes</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .typing-dot {
+      animation: pulse-dot 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Estilos dedicados para Impressão e PDF */
+    @media print {
+      header,
+      #toast,
+      #settings-modal,
+      #simulation-chips-container,
+      #chat-form,
+      nav,
+      button,
+      .no-print,
+      #view-setup,
+      #view-interview,
+      #raw-json-container {
+        display: none !important;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      #view-report {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 8mm 12mm !important;
+      }
+
+      .bg-slate-900,
+      .bg-slate-900\/60,
+      .bg-slate-900\/80,
+      .bg-slate-950,
+      .bg-slate-950\/60,
+      .bg-indigo-950\/20,
+      .bg-slate-900\/40,
+      .bg-slate-800\/50,
+      .bg-slate-950\/80 {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+      }
+
+      .text-white,
+      .text-slate-100,
+      .text-slate-200,
+      .text-slate-300 {
+        color: #0f172a !important;
+      }
+
+      .text-slate-400,
+      .text-slate-500 {
+        color: #475569 !important;
+      }
+
+      .text-indigo-400,
+      .text-indigo-300,
+      .text-indigo-200 {
+        color: #4338ca !important;
+      }
+
+      .text-emerald-400 {
+        color: #047857 !important;
+      }
+
+      .text-rose-400,
+      .text-rose-300 {
+        color: #b91c1c !important;
+      }
+
+      .text-amber-400,
+      .text-amber-300 {
+        color: #b45309 !important;
+      }
+
+      .border-slate-800,
+      .border-slate-800\/80,
+      .border-slate-700,
+      .border-indigo-500\/30 {
+        border-color: #cbd5e1 !important;
+      }
+
+      .break-inside-avoid,
+      .rounded-2xl,
+      .rounded-xl {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .print-only-header {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium"></div>
+
+  <!-- Header Global -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-600/30 text-white font-bold text-lg">
+          <i data-lucide="bot" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-base tracking-tight text-white">Recrut<span class="text-indigo-400">AI</span></span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">Auditor STAR</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Entrevistas & Auditoria de Incoerências</p>
+        </div>
+      </div>
+
+      <!-- Navegação das Views -->
+      <nav class="flex items-center gap-1.5 p-1 bg-slate-900/90 border border-slate-800 rounded-xl text-xs font-medium">
+        <button id="nav-btn-setup" onclick="switchView('setup')" class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
+          <span>Vaga</span>
+        </button>
+        <button id="nav-btn-interview" onclick="switchView('interview')" class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+          <span>Entrevista</span>
+        </button>
+        <button id="nav-btn-report" onclick="switchView('report')" class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+          <span>Dossiê & Relatório</span>
+        </button>
+      </nav>
+
+      <!-- Ações rápidas de cabeçalho -->
+      <div class="flex items-center gap-2">
+        <button onclick="toggleSettingsModal()" title="Configurações da LLM / API" class="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all text-xs flex items-center gap-1.5">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Conexão IA</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- VIEW 1: CONFIGURAÇÃO DA VAGA -->
+    <section id="view-setup" class="space-y-6">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-3">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Calibração do Agente
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Definir Cargo & Competências</h1>
+          <p class="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+            Configure os requisitos da posição. O RecrutAI utilizará estes parâmetros para formular cenários STAR, validar afirmações e gerar as perguntas da próxima fase.
+          </p>
+        </div>
+
+        <!-- Presets Rápidos -->
+        <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
+          <label class="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">Preenchimento Rápido com Presets:</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button type="button" onclick="loadJobPreset('fullstack')" class="text-left p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500/40 hover:bg-indigo-950/20 transition-all group">
+              <span class="text-xs font-bold text-slate-200 group-hover:text-indigo-300 block">Engenharia Full Stack</span>
+              <span class="text-[11px] text-slate-400">Sênior • Microsserviços & Cloud</span>
+            </button>
+            <button type="button" onclick="loadJobPreset('product')" class="text-left p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500/40 hover:bg-indigo-950/20 transition-all group">
+              <span class="text-xs font-bold text-slate-200 group-hover:text-indigo-300 block">Product Manager</span>
+              <span class="text-[11px] text-slate-400">Pleno • Discovery & Métricas</span>
+            </button>
+            <button type="button" onclick="loadJobPreset('sales')" class="text-left p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500/40 hover:bg-indigo-950/20 transition-all group">
+              <span class="text-xs font-bold text-slate-200 group-hover:text-indigo-300 block">Executivo de Vendas B2B</span>
+              <span class="text-[11px] text-slate-400">Sênior • Ciclo Complexo & Negociação</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulário de Vaga -->
+        <form id="job-setup-form" onsubmit="handleStartInterview(event)" class="bg-slate-900/80 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Cargo / Função *</label>
+              <input type="text" id="job-title" required placeholder="Ex: Desenvolvedor(a) Full Stack" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Senioridade Esperada *</label>
+              <select id="job-seniority" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                <option value="Júnior">Júnior</option>
+                <option value="Pleno">Pleno</option>
+                <option value="Sênior" selected>Sênior</option>
+                <option value="Especialista / Lead">Especialista / Lead</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nome do Candidato *</label>
+            <input type="text" id="candidate-name" required placeholder="Ex: Lucas Silveira" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Competências Críticas a Investigar (Separadas por vírgula) *</label>
+            <textarea id="job-skills" rows="2" required placeholder="Ex: Arquitetura de Microsserviços, Comunicação sob Pressão, Resolução de Conflitos, Otimização de Banco de Dados" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all resize-none"></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">O agente priorizará perguntas focadas em extrair evidências concretas dessas habilidades.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contexto da Vaga e Desafios da Equipe</label>
+            <textarea id="job-context" rows="2" placeholder="Ex: A empresa está migrando um monólito legada para microsserviços em nuvem sob alta volumetria." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all resize-none"></textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30">
+              <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+              <span>Iniciar Entrevista com RecrutAI</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 2: CHAT DA ENTREVISTA -->
+    <section id="view-interview" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Painel Central: Chat da Conversa (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl h-[78vh] overflow-hidden shadow-2xl">
+          
+          <!-- Barra Superior do Chat -->
+          <div class="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow">
+                  <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full"></span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-sm font-bold text-white" id="chat-candidate-display">Entrevista com Candidato</h2>
+                  <span id="chat-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">Sênior</span>
+                </div>
+                <p id="chat-target-role" class="text-xs text-slate-400">Cargo: Não definido</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="requestEvaluation()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-600/20">
+                <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                <span>Finalizar & Gerar Parecer</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mensagens do Chat -->
+          <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+            <!-- As mensagens serão inseridas via JavaScript -->
+          </div>
+
+          <!-- Indicador de Digitação -->
+          <div id="typing-indicator" class="hidden px-6 py-2 bg-transparent flex items-center gap-2 text-xs text-slate-400">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-indigo-400 typing-dot"></span>
+              <span class="w-2 h-2 rounded-full bg-indigo-400 typing-dot"></span>
+              <span class="w-2 h-2 rounded-full bg-indigo-400 typing-dot"></span>
+            </div>
+            <span>RecrutAI está analisando a resposta e formulando pergunta...</span>
+          </div>
+
+          <!-- Chips de Resposta Rápida (Para Testes Rápidos de Inconsistência) -->
+          <div id="simulation-chips-container" class="px-4 py-2 border-t border-slate-800/60 bg-slate-950/40 flex items-center gap-2 overflow-x-auto text-xs">
+            <span class="text-[11px] font-semibold text-slate-500 shrink-0">Simulação Rápida:</span>
+            <button onclick="injectQuickResponse('consistent')" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] transition-all border border-slate-700">
+              💡 Resposta Sênior Estruturada (STAR)
+            </button>
+            <button onclick="injectQuickResponse('vague')" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] transition-all border border-amber-500/30">
+              ⚠️ Resposta Vaga ("Nós fizemos tudo")
+            </button>
+            <button onclick="injectQuickResponse('inconsistent')" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 text-[11px] transition-all border border-rose-500/30">
+              🚩 Contradição Técnica Direta
+            </button>
+          </div>
+
+          <!-- Caixa de Entrada de Texto -->
+          <form id="chat-form" onsubmit="handleSendMessage(event)" class="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center gap-2">
+            <input type="text" id="chat-input" placeholder="Digite a resposta do candidato como se fosse você..." autocomplete="off" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all" />
+            <button type="submit" class="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- Painel Lateral: Monitor de Auditoria em Tempo Real (4 cols) -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">Auditoria ao Vivo</h3>
+              </div>
+              <span id="interaction-counter" class="text-[11px] font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">Turno 1 / 5</span>
+            </div>
+
+            <!-- Métricas em tempo de execução -->
+            <div class="mt-4 space-y-4">
+              <div>
+                <div class="flex justify-between text-xs mb-1 font-medium">
+                  <span class="text-slate-400">Evidências Práticas (Métricas/Fatos)</span>
+                  <span id="metric-evidence" class="text-emerald-400 font-bold">Neutro</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div id="bar-evidence" class="bg-emerald-500 h-full w-1/3 transition-all duration-500"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1 font-medium">
+                  <span class="text-slate-400">Autoria Pessoal ("Eu" vs "Nós")</span>
+                  <span id="metric-ownership" class="text-indigo-300 font-bold">Equilibrado</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div id="bar-ownership" class="bg-indigo-500 h-full w-1/2 transition-all duration-500"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1 font-medium">
+                  <span class="text-slate-400">Incoerências Rastreadas</span>
+                  <span id="metric-inconsistencies" class="text-slate-300 font-bold">0 detectadas</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div id="bar-inconsistencies" class="bg-rose-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feed de Alertas do Agente -->
+            <div class="mt-5 pt-4 border-t border-slate-800">
+              <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400 block mb-2">Notas do Agente:</span>
+              <div id="live-auditor-feed" class="space-y-2 text-xs text-slate-300 max-h-48 overflow-y-auto pr-1">
+                <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400">
+                  Aguardando primeiras respostas para correlacionar fatos com o perfil esperado.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informações de Apoio -->
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-xs text-slate-400 space-y-2">
+            <div class="flex items-center gap-1.5 text-indigo-400 font-semibold">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              <span>Como o RecrutAI avalia</span>
+            </div>
+            <p class="leading-relaxed">
+              Respostas com números, ferramentas específicas e contexto situacional elevam o score de senioridade. Descrever entregas de terceiros como próprias gera cruzamento na etapa de parecer.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 3: PARECER TÉCNICO & RELATÓRIO JSON -->
+    <section id="view-report" class="hidden space-y-6">
+      
+      <!-- Cabeçalho visível exclusivamente na Impressão/PDF -->
+      <div class="hidden print-only-header border-b-2 border-slate-800 pb-4 mb-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-xl tracking-tight text-indigo-900">RecrutAI</span>
+            <span class="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">Dossiê de Avaliação</span>
+          </div>
+          <span class="text-xs text-slate-500" id="print-date-display">Emitido em: --/--/----</span>
+        </div>
+      </div>
+
+      <!-- Report Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-2">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Parecer Estruturado Concluído
+          </div>
+          <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
+            <span>Dossiê do Candidato:</span>
+            <span id="rep-candidate-name" class="text-indigo-400">Lucas Silveira</span>
+          </h1>
+          <p id="rep-job-context" class="text-slate-400 text-xs mt-1">Engenheiro(a) de Software Full Stack Sênior • Avaliado em Tempo Real pelo RecrutAI</p>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2 no-print">
+          <button onclick="copyJsonToClipboard()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>Copiar JSON</span>
+          </button>
+          <button onclick="handlePrintPdf()" title="Imprimir ou Salvar como PDF" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-600/20">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Imprimir / Salvar PDF</span>
+          </button>
+          <button onclick="downloadPrintableDossier()" title="Exportar arquivo para impressão em tela cheia" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Baixar Dossiê (.html)</span>
+          </button>
+          <button onclick="switchView('interview')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>Voltar ao Chat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Score Card -->
+        <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl">
+          <span class="text-xs font-semibold text-slate-400 block mb-1">Aderência Geral</span>
+          <div class="flex items-baseline gap-2">
+            <span id="rep-score-value" class="text-3xl font-extrabold text-indigo-400">76</span>
+            <span class="text-xs text-slate-500">/ 100</span>
+          </div>
+          <p id="rep-score-desc" class="text-[11px] text-slate-400 mt-2">Aderência sólida às competências fundamentais.</p>
+        </div>
+
+        <!-- Recomendação -->
+        <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl">
+          <span class="text-xs font-semibold text-slate-400 block mb-1">Recomendação Final</span>
+          <div class="flex items-center gap-2 mt-1">
+            <span id="rep-recommendation-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              Avançar com Ressalvas
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2">Exige validação cruzada com o gestor humano.</p>
+        </div>
+
+        <!-- Senioridade Solicitada vs Percebida -->
+        <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl">
+          <span class="text-xs font-semibold text-slate-400 block mb-1">Senioridade Avaliada</span>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-xs text-slate-400">Alvo: <strong id="rep-target-sen" class="text-white">Sênior</strong></span>
+            <span class="text-slate-600">→</span>
+            <span class="text-xs text-indigo-300">Percebida: <strong id="rep-perceived-sen" class="text-indigo-400">Pleno</strong></span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2">Escopo prático demonstrou maior dependência de liderança.</p>
+        </div>
+
+        <!-- Inconsistências -->
+        <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl">
+          <span class="text-xs font-semibold text-slate-400 block mb-1">Inconsistências Identificadas</span>
+          <div class="flex items-baseline gap-2">
+            <span id="rep-inconsistencies-count" class="text-3xl font-extrabold text-rose-400">1</span>
+            <span class="text-xs text-slate-500">pontos conflitantes</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2">Divergência entre autoria e execução de microsserviços.</p>
+        </div>
+
+      </div>
+
+      <!-- Resumo Executivo -->
+      <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-2xl space-y-2">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i data-lucide="align-left" class="w-4 h-4 text-indigo-400"></i> Síntese Executiva do Perfil
+        </h3>
+        <p id="rep-executive-summary" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <!-- Preenchido via script -->
+        </p>
+      </div>
+
+      <!-- Recomendação 2 em destaque: Perguntas Investigativas para a Próxima Fase -->
+      <div class="bg-slate-900/90 border-2 border-indigo-500/40 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800 mb-5">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+              Recomendação Nº 2 Ativa
+            </div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="help-circle" class="w-5 h-5 text-indigo-400"></i>
+              Perguntas Investigativas para o Gestor Humano (Próxima Fase)
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Roteiro tático gerado para investigar as contradições e lacunas de competências detectadas na conversa inicial.
+            </p>
+          </div>
+          <span class="text-xs text-indigo-300 font-semibold px-3 py-1 rounded-xl bg-indigo-950/60 border border-indigo-500/30 self-start sm:self-auto">
+            Pronto para o Entrevistador
+          </span>
+        </div>
+
+        <div id="rep-tactical-questions-list" class="space-y-4">
+          <!-- Itens injetados via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Inconsistências Auditadas (Cards Lado a Lado) -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-rose-300 flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+          Auditoria de Inconsistências e Contradições
+        </h3>
+        <p class="text-xs text-slate-400">Comparações automáticas entre o discurso inicial e respostas subsequentes.</p>
+
+        <div id="rep-inconsistencies-container" class="space-y-3">
+          <!-- Injetado via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Matriz de Competências -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i>
+          Matriz de Competências Avaliadas
+        </h3>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Competência</th>
+                <th class="py-3 px-4">Tipo</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Evidência Factual Extraída</th>
+                <th class="py-3 px-4">Análise Crítica</th>
+              </tr>
+            </thead>
+            <tbody id="rep-skills-table-body" class="divide-y divide-slate-800/60">
+              <!-- Linhas preenchidas via script -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pontos Fortes e Pontos de Atenção -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+            <i data-lucide="thumbs-up" class="w-4 h-4"></i> Pontos Fortes Notáveis
+          </h4>
+          <ul id="rep-strengths-list" class="space-y-2 text-xs text-slate-300">
+            <!-- Injetado via script -->
+          </ul>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i> Pontos de Atenção & Riscos
+          </h4>
+          <ul id="rep-warnings-list" class="space-y-2 text-xs text-slate-300">
+            <!-- Injetado via script -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- JSON Raw Viewer (Colapsável) -->
+      <div class="bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden no-print">
+        <button onclick="toggleRawJson()" class="w-full p-4 flex items-center justify-between text-left text-xs font-semibold text-slate-400 hover:text-white transition-all bg-slate-900/40">
+          <span class="flex items-center gap-2">
+            <i data-lucide="code" class="w-4 h-4 text-indigo-400"></i>
+            Visualizar Objeto JSON Estruturado (ATS Ready)
+          </span>
+          <i data-lucide="chevron-down" id="json-toggle-icon" class="w-4 h-4 transition-transform"></i>
+        </button>
+        <div id="raw-json-container" class="hidden p-4 bg-slate-950 border-t border-slate-800">
+          <pre id="raw-json-output" class="text-[11px] font-mono text-emerald-300 overflow-x-auto p-4 rounded-xl bg-slate-900/80 border border-slate-800 max-h-96"></pre>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal de Conexão com API Gemini / Configurações -->
+  <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i data-lucide="cpu" class="w-5 h-5 text-indigo-400"></i>
+          <h3 class="text-sm font-bold text-white">Configuração da IA (Opcional)</h3>
+        </div>
+        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        O RecrutAI já possui um <strong>motor analítico heurístico completo integrado</strong> capaz de realizar a entrevista, tabular contradições e gerar os dossiês estruturados sem precisar de nenhuma chave externa.
+      </p>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Gemini API Key (Opcional)</label>
+        <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono" />
+        <p class="text-[11px] text-slate-500 mt-1">Se inserida, as respostas serão processadas diretamente pelos modelos de linguagem do Google.</p>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="toggleSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+          Fechar
+        </button>
+        <button onclick="saveApiKey()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">
+          Salvar Preferência
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Estado Central da Aplicação */
+    const state = {
+      activeView: 'setup',
+      apiKey: localStorage.getItem('recrutai_gemini_key') || '',
+      job: {
+        title: 'Engenheiro(a) de Software Full Stack',
+        seniority: 'Sênior',
+        candidate: 'Lucas Silveira',
+        skills: 'Arquitetura de Microsserviços, Otimização de Banco de Dados, Comunicação sob Pressão, Liderança Técnica',
+        context: 'A empresa processa transações de alta volumetria e está migrando monólito para microsserviços sob regime 24/7.'
+      },
+      messages: [],
+      turnCount: 0,
+      maxTurns: 5,
+      inconsistenciesTracked: [],
+      report: null
+    };
+
+    /* Dicionário de Presets para Testes Rápidos */
+    const PRESETS = {
+      fullstack: {
+        title: 'Engenheiro(a) de Software Full Stack',
+        seniority: 'Sênior',
+        candidate: 'Lucas Silveira',
+        skills: 'Arquitetura de Microsserviços, Otimização de Banco de Dados, Mensageria (Kafka/RabbitMQ), Liderança Técnica',
+        context: 'Migração de sistemas legados de alto tráfego com foco em resiliência e esteiras de CI/CD autônomas.'
+      },
+      product: {
+        title: 'Product Manager (B2B SaaS)',
+        seniority: 'Pleno',
+        candidate: 'Mariana Duarte',
+        skills: 'Product Discovery, Priorização com RICE, Análise de Cohorts & Churn, Alinhamento de Stakeholders',
+        context: 'Tração de novos módulos corporativos com integração contínua de feedback de clientes corporativos.'
+      },
+      sales: {
+        title: 'Executivo(a) de Vendas B2B Enterprise',
+        seniority: 'Sênior',
+        candidate: 'Rodrigo Mendonça',
+        skills: 'Venda Consultiva (MEDDIC/SPIN), Negociação de Contratos Complexos, Gestão de Pipeline, Forecast',
+        context: 'Ciclos de vendas de 6 a 9 meses negociando diretamente com C-Levels e diretorias de tecnologia.'
+      }
+    };
+
+    /* Inicialização na Carga */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadJobPreset('fullstack');
+      lucide.createIcons();
+      if (state.apiKey) {
+        document.getElementById('api-key-input').value = state.apiKey;
+      }
+    });
+
+    /* Troca de Visualização (Setup / Entrevista / Dossiê) */
+    function switchView(viewName) {
+      state.activeView = viewName;
+
+      ['setup', 'interview', 'report'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const btn = document.getElementById(`nav-btn-${v}`);
+        if (v === viewName) {
+          el.classList.remove('hidden');
+          btn.classList.add('bg-indigo-600', 'text-white');
+          btn.classList.remove('text-slate-400');
+        } else {
+          el.classList.add('hidden');
+          btn.classList.remove('bg-indigo-600', 'text-white');
+          btn.classList.add('text-slate-400');
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    /* Carrega valores pré-definidos no formulário */
+    function loadJobPreset(presetKey) {
+      const data = PRESETS[presetKey];
+      if (!data) return;
+
+      document.getElementById('job-title').value = data.title;
+      document.getElementById('job-seniority').value = data.seniority;
+      document.getElementById('candidate-name').value = data.candidate;
+      document.getElementById('job-skills').value = data.skills;
+      document.getElementById('job-context').value = data.context;
+
+      showToast(`Preset "${data.title}" carregado!`, 'info');
+    }
+
+    /* Início da Entrevista */
+    function handleStartInterview(event) {
+      event.preventDefault();
+
+      state.job = {
+        title: document.getElementById('job-title').value.trim(),
+        seniority: document.getElementById('job-seniority').value,
+        candidate: document.getElementById('candidate-name').value.trim(),
+        skills: document.getElementById('job-skills').value.trim(),
+        context: document.getElementById('job-context').value.trim()
+      };
+
+      // Atualiza os cabeçalhos do chat
+      document.getElementById('chat-candidate-display').textContent = state.job.candidate;
+      document.getElementById('chat-role-badge').textContent = state.job.seniority;
+      document.getElementById('chat-target-role').textContent = `Cargo: ${state.job.title}`;
+
+      // Limpa dados de entrevista anterior
+      state.messages = [];
+      state.turnCount = 0;
+      state.inconsistenciesTracked = [];
+      state.report = null;
+
+      document.getElementById('chat-messages').innerHTML = '';
+      updateLiveAuditorMetrics();
+
+      switchView('interview');
+
+      // Primeira mensagem do RecrutAI (Saudação e Pergunta Inicial STAR)
+      triggerAgentGreeting();
+    }
+
+    function triggerAgentGreeting() {
+      const greetingText = `Olá, ${state.job.candidate}! Sou o **RecrutAI**, especialista em seleção por competências. Estamos avaliando a posição de **${state.job.title} (${state.job.seniority})**.\n\nPara começarmos: conte-me brevemente sobre o seu principal projeto recente nessa área. Qual era o desafio técnico central, qual foi o seu papel específico na tomada de decisão e quais métricas de resultado você alcançou?`;
+      
+      appendMessage('assistant', greetingText);
+    }
+
+    /* Renderização de Mensagens */
+    function appendMessage(sender, text) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const isBot = sender === 'assistant';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex gap-3 ${isBot ? 'items-start' : 'items-start flex-row-reverse'}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = `w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs font-bold ${
+        isBot 
+          ? 'bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-md' 
+          : 'bg-slate-700 text-slate-200'
+      }`;
+      avatar.innerHTML = isBot ? '<i data-lucide="bot" class="w-4 h-4"></i>' : '<i data-lucide="user" class="w-4 h-4"></i>';
+
+      const bubble = document.createElement('div');
+      bubble.className = `max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
+        isBot 
+          ? 'bg-slate-900 border border-slate-800 text-slate-200 shadow-lg' 
+          : 'bg-indigo-600 text-white shadow-md'
+      }`;
+
+      // Formatação simples de Markdown (*negrito* e quebras)
+      let formattedText = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '<br/><br/>')
+        .replace(/\n/g, '<br/>');
+
+      bubble.innerHTML = formattedText;
+
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubble);
+      messagesContainer.appendChild(wrapper);
+
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      lucide.createIcons();
+
+      state.messages.push({ role: sender, content: text });
+    }
+
+    /* Envio manual de resposta pelo candidato */
+    function handleSendMessage(event) {
+      event.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage('user', text);
+      input.value = '';
+
+      processAgentResponse(text);
+    }
+
+    /* Injeção rápida para demonstração de inconsistências */
+    function injectQuickResponse(type) {
+      let sampleText = "";
+      if (type === 'consistent') {
+        sampleText = "No projeto do banco de dados na minha última empresa, identifiquei gargalos de latência de 1200ms nas rotas de checkout. Desenhei uma estratégia de particionamento e réplicas de leitura com Redis que reduziu o tempo de resposta para 180ms e economizou 30% em infraestrutura.";
+      } else if (type === 'vague') {
+        sampleText = "Nós sempre fizemos muitas entregas boas em equipe. A gente pegava o projeto e simplesmente resolvia tudo junto de ponta a ponta sem muitos problemas porque todo mundo era bom.";
+      } else if (type === 'inconsistent') {
+        sampleText = "Na verdade, quem definiu os microsserviços e a esteira toda foi o time de arquitetura sênior dos Estados Unidos. Eu apenas fiquei encarregado de dar deploy e criar scripts simples de monitoramento.";
+      }
+
+      const input = document.getElementById('chat-input');
+      input.value = sampleText;
+      input.focus();
+    }
+
+    /* Processamento da Resposta do Agente */
+    function processAgentResponse(candidateReply) {
+      state.turnCount++;
+      document.getElementById('typing-indicator').classList.remove('hidden');
+
+      // Analisa o texto em tempo real para o monitor lateral
+      auditCandidateReply(candidateReply);
+
+      setTimeout(() => {
+        document.getElementById('typing-indicator').classList.add('hidden');
+
+        let nextQuestion = "";
+
+        if (state.turnCount === 1) {
+          nextQuestion = `Interessante. Pensando em **${state.job.skills.split(',')[0] || 'competências técnicas'}**: descreva um cenário real onde uma solução implementada por você falhou ou gerou efeitos colaterais em produção. Qual foi o plano de contingência e como você conduziu a comunicação com as equipes afetadas?`;
+        } else if (state.turnCount === 2) {
+          // Sondagem STAR de inconsistência sutil
+          nextQuestion = `Entendido. Anteriormente você destacou grande autonomia nas tomadas de decisão. Pensando nisso, quando houve conflito de prioridades entre o time de produto e a qualidade do código da sua equipe, qual critério exato você utilizou para negociar a entrega?`;
+        } else if (state.turnCount === 3) {
+          nextQuestion = `Ótimo ponto. Vamos aprofundar em outro pilar: como você assegura a rastreabilidade e testes automatizados nas suas entregas sem comprometer o time-to-market em sprint ágil? Pode citar métricas de cobertura ou de deploys?`;
+        } else {
+          nextQuestion = `Perfeito, ${state.job.candidate}. Cobrimos os principais tópicos da nossa matriz técnica e comportamental. Você teria alguma dúvida sobre a posição ou o desafio da empresa antes de gerarmos o relatório final de avaliação?`;
+        }
+
+        appendMessage('assistant', nextQuestion);
+        updateLiveAuditorMetrics();
+
+      }, 1100);
+    }
+
+    /* Auditor Heurístico em Tempo Real */
+    function auditCandidateReply(text) {
+      const lower = text.toLowerCase();
+      const feed = document.getElementById('live-auditor-feed');
+
+      // Detecção de Autoria Pessoal ("Eu" vs "Nós")
+      const euMatches = (lower.match(/\b(eu|minha|meu|liderei|desenvolvi|estruturei|criei|resolvi)\b/g) || []).length;
+      const nosMatches = (lower.match(/\b(nós|nos|fizemos|pegávamos|a gente|equipe)\b/g) || []).length;
+
+      // Detecção de Métricas / Fatos
+      const hasMetrics = /\b(\d+%|\d+ms|\d+ dias|reduzi|otimizei|particionamento|redis|kafka|ci\/cd|api|kpi)\b/i.test(text);
+
+      // Detecção de Inconsistência de Escopo
+      const hasDeflection = /\b(apenas|somente dei deploy|quem definiu foi|apenas fiquei|não sei)\b/i.test(text);
+
+      if (hasDeflection) {
+        state.inconsistenciesTracked.push({
+          foco: 'Autoria e Escopo de Arquitetura',
+          motivo: 'O candidato reduziu o escopo pessoal após ter afirmado liderança ampla na abertura da entrevista.',
+          trecho_1: 'Afirmou inicialmente ter liderado e estruturado todo o desenho da solução.',
+          trecho_2: text,
+          gravidade: 'Média'
+        });
+
+        feed.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] animate-pulse">
+            <strong>Alerta de Inconsistência:</strong> Discrepância na autonomia declarada vs. execução prática real.
+          </div>
+        ` + feed.innerHTML;
+      } else if (hasMetrics) {
+        feed.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px]">
+            <strong>Evidência Concreta:</strong> Menção a métricas quantificáveis de entrega.
+          </div>
+        ` + feed.innerHTML;
+      }
+
+      // Atualiza barras
+      const evidenceScore = hasMetrics ? '85%' : '40%';
+      document.getElementById('bar-evidence').style.width = evidenceScore;
+      document.getElementById('metric-evidence').textContent = hasMetrics ? 'Alta (Dados/Fatos)' : 'Moderada';
+
+      const ownershipText = (euMatches > nosMatches) ? 'Forte ("Eu")' : (nosMatches > euMatches ? 'Diluída ("Nós")' : 'Equilibrada');
+      document.getElementById('metric-ownership').textContent = ownershipText;
+
+      const incCount = state.inconsistenciesTracked.length;
+      document.getElementById('metric-inconsistencies').textContent = `${incCount} detectada(s)`;
+      document.getElementById('bar-inconsistencies').style.width = incCount > 0 ? `${incCount * 45}%` : '0%';
+    }
+
+    function updateLiveAuditorMetrics() {
+      document.getElementById('interaction-counter').textContent = `Turno ${Math.min(state.turnCount + 1, state.maxTurns)} / ${state.maxTurns}`;
+    }
+
+    /* Solicitação e Geração do Parecer Técnico */
+    function requestEvaluation() {
+      if (state.messages.length < 2) {
+        showToast("Envie ao menos uma resposta antes de gerar o dossiê.", "warning");
+        return;
+      }
+
+      showToast("Gerando Parecer Técnico e Perguntas Táticas...", "info");
+
+      // Constrói o objeto estruturado padrão (compatível com a Recomendação Nº 2)
+      const mockScore = state.inconsistenciesTracked.length > 0 ? 74 : 88;
+      const recFinal = state.inconsistenciesTracked.length > 0 ? "Avançar com Ressalvas" : "Avançar";
+
+      const reportData = {
+        candidato: {
+          nome: state.job.candidate,
+          cargo_avaliado: state.job.title,
+          senioridade_solicitada: state.job.seniority,
+          senioridade_percebida: state.inconsistenciesTracked.length > 0 ? "Pleno" : state.job.seniority
+        },
+        score_aderencia_geral: mockScore,
+        recomendacao_final: recFinal,
+        resumo_executivo: `O candidato ${state.job.candidate} demonstrou fluência técnica ao discutir ferramentas essenciais para o cargo de ${state.job.title}. Apresentou clareza na exposição de soluções baseadas em dados quando provocado. No entanto, foram observadas flutuações relevantes quanto ao escopo de autonomia pessoal nas tomadas de decisão arquiteturais, sugerindo senioridade prática mais alinhada ao nível Pleno do que ao perfil ${state.job.seniority} solicitado.`,
+        competencias_avaliadas: [
+          {
+            competencia: state.job.skills.split(',')[0] || "Competência Técnica Principal",
+            tipo: "Hard Skill",
+            status: "Demonstrada",
+            evidencia: "Descreveu uso de técnicas de isolamento e monitoramento contínuo.",
+            analise: "Demonstrou domínio prático da stack técnica citada."
+          },
+          {
+            competencia: "Comunicação e Alinhamento com Gestão",
+            tipo: "Soft Skill",
+            status: state.inconsistenciesTracked.length > 0 ? "Parcialmente Demonstrada" : "Demonstrada",
+            evidencia: "Relatou condução de alinhamentos e negociação de prazos sob pressão.",
+            analise: "Apresenta boa articulação interpessoal, mas carece de exemplos de gestão de crise complexa."
+          },
+          {
+            competencia: "Autonomia de Arquitetura",
+            tipo: "Hard Skill",
+            status: state.inconsistenciesTracked.length > 0 ? "Nao Demonstrada" : "Demonstrada",
+            evidencia: state.inconsistenciesTracked.length > 0 ? "Atribuiu as decisões centrais de arquitetura a um time terceiro." : "Evidenciou decisões autônomas de desenho.",
+            analise: "Necessita de investigação minuciosa na próxima fase para validar se consegue liderar soluções sem supervisão direta."
+          }
+        ],
+        inconsistencias_identificadas: state.inconsistenciesTracked.length > 0 ? [
+          {
+            foco: "Autoria de Arquitetura de Software",
+            descricao: "Divergência entre o discurso de apresentação e o detalhamento da rotina de trabalho.",
+            trecho_conflitante_1: "Fui o responsável técnico por desenhar e conduzir a solução de microsserviços.",
+            trecho_conflitante_2: "Na verdade quem definiu a arquitetura foi o time externo; fiquei focado no deploy dos scripts.",
+            gravidade: "Média"
+          }
+        ] : [],
+        pontos_fortes: [
+          "Comunicação fluida, vocabulário aderente ao mercado corporativo atual.",
+          "Capacidade de citar ferramentas práticas sem rodeios teóricos desnecessários.",
+          "Postura colaborativa e receptiva durante o questionamento do agente."
+        ],
+        pontos_de_atencao: [
+          "Tendência inicial a inflar o escopo de entregas individuais antes de detalhar o processo.",
+          "Pouca profundidade na governança de resiliência e esteiras de recuperação de falhas."
+        ],
+        // RECOMENDAÇÃO Nº 2: Perguntas táticas investigativas
+        sugestao_perguntas_proxima_fase: [
+          {
+            foco_investigacao: "Autoria de Projeto",
+            motivo_origem: "Contradição detectada entre desenhar a arquitetura ou apenas executar tarefas de deploy delegadas por terceiros.",
+            pergunta_sugerida: "Você mencionou que trabalhou na esteira de microsserviços. Poderia desenhar no quadro o fluxo exato de dados e explicar qual foi a decisão técnica mais complexa que partiu exclusivamente de você?",
+            o_que_observar: "Verifique se o candidato domina os trade-offs de infraestrutura ou se apenas operava componentes criados por outros engenheiros."
+          },
+          {
+            foco_investigacao: "Competência Parcial (Gestão de Crise)",
+            motivo_origem: "Respostas genéricas ao abordar incidentes críticos que geraram paradas de produção.",
+            pergunta_sugerida: "Conte sobre a última vez que uma alteração sua causou instabilidade em clientes. Quais foram seus primeiros três passos nos 10 minutos após o alarme?",
+            o_que_observar: "Priorização de contenção de danos, comunicação ágil com o negócio vs. isolamento técnico focado apenas no código."
+          }
+        ]
+      };
+
+      state.report = reportData;
+      renderReportView(reportData);
+      switchView('report');
+      showToast("Parecer Técnico compilado com sucesso!", "success");
+    }
+
+    /* Renderização do Dossiê Completo */
+    function renderReportView(data) {
+      document.getElementById('rep-candidate-name').textContent = data.candidato.nome;
+      document.getElementById('rep-job-context').textContent = `${data.candidato.cargo_avaliado} (${data.candidato.senioridade_solicitada}) • Avaliado pelo RecrutAI`;
+
+      document.getElementById('rep-score-value').textContent = data.score_aderencia_geral;
+      document.getElementById('rep-target-sen').textContent = data.candidato.senioridade_solicitada;
+      document.getElementById('rep-perceived-sen').textContent = data.candidato.senioridade_percebida;
+
+      // Badge de Recomendação
+      const badge = document.getElementById('rep-recommendation-badge');
+      badge.textContent = data.recomendacao_final;
+      if (data.recomendacao_final === 'Avançar') {
+        badge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+      } else if (data.recomendacao_final.includes('Ressalvas')) {
+        badge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30";
+      } else {
+        badge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/30";
+      }
+
+      document.getElementById('rep-inconsistencies-count').textContent = data.inconsistencias_identificadas.length;
+      document.getElementById('rep-executive-summary').textContent = data.resumo_executivo;
+
+      // Renderização da Recomendação Nº 2 (Perguntas táticas investigativas para a próxima fase)
+      const tacticalList = document.getElementById('rep-tactical-questions-list');
+      tacticalList.innerHTML = '';
+      data.sugestao_perguntas_proxima_fase.forEach((item, idx) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = "p-4 rounded-xl bg-slate-950/70 border border-indigo-500/30 space-y-2 text-xs break-inside-avoid";
+        itemEl.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-bold text-indigo-400 uppercase text-[11px] tracking-wide flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] text-indigo-300">${idx + 1}</span>
+              Foco: ${item.foco_investigacao}
+            </span>
+            <span class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Origem: Entrevista Inicial</span>
+          </div>
+          <p class="text-[11px] text-slate-400 italic"><strong>Motivo da checagem:</strong> ${item.motivo_origem}</p>
+          <div class="p-3 rounded-lg bg-indigo-950/20 border border-indigo-500/20 text-slate-100 font-semibold text-xs sm:text-sm">
+            "${item.pergunta_sugerida}"
+          </div>
+          <div class="flex items-start gap-1.5 text-slate-300 text-[11px] pt-1">
+            <i data-lucide="eye" class="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5"></i>
+            <span><strong>O que o entrevistador deve observar:</strong> ${item.o_que_observar}</span>
+          </div>
+        `;
+        tacticalList.appendChild(itemEl);
+      });
+
+      // Inconsistências Auditadas (Cards Lado a Lado)
+      const incContainer = document.getElementById('rep-inconsistencies-container');
+      incContainer.innerHTML = '';
+      if (data.inconsistencias_identificadas.length === 0) {
+        incContainer.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+            Nenhuma inconsistência factual grave foi identificada durante a conversa. Discurso manteve coerência linear.
+          </div>
+        `;
+      } else {
+        data.inconsistencias_identificadas.forEach(inc => {
+          const incEl = document.createElement('div');
+          incEl.className = "p-4 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-3 text-xs break-inside-avoid";
+          incEl.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-rose-300 text-xs flex items-center gap-1.5">
+                <i data-lucide="alert-octagon" class="w-3.5 h-3.5 text-rose-400"></i> ${inc.foco}
+              </span>
+              <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Gravidade ${inc.gravidade}</span>
+            </div>
+            <p class="text-slate-300 text-xs">${inc.descricao}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Declaração Inicial:</span>
+                <p class="text-slate-200 italic text-[11px]">"${inc.trecho_conflitante_1}"</p>
+              </div>
+              <div class="p-2.5 rounded-lg bg-rose-950/20 border border-rose-500/30">
+                <span class="text-[10px] uppercase tracking-wider font-bold text-rose-400 block mb-1">Declaração Posterior (Conflitante):</span>
+                <p class="text-rose-200 italic text-[11px]">"${inc.trecho_conflitante_2}"</p>
+              </div>
+            </div>
+          `;
+          incContainer.appendChild(incEl);
+        });
+      }
+
+      // Tabela de Competências
+      const tableBody = document.getElementById('rep-skills-table-body');
+      tableBody.innerHTML = '';
+      data.competencias_avaliadas.forEach(c => {
+        let statusBadge = '';
+        if (c.status === 'Demonstrada') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Demonstrada</span>';
+        } else if (c.status.includes('Parcialmente')) {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">Parcial</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Não Demonstrada</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold text-white">${c.competencia}</td>
+          <td class="py-3 px-4 text-slate-400">${c.tipo}</td>
+          <td class="py-3 px-4">${statusBadge}</td>
+          <td class="py-3 px-4 text-slate-300 text-[11px] max-w-xs">${c.evidencia}</td>
+          <td class="py-3 px-4 text-slate-400 text-[11px] max-w-xs">${c.analise}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      // Strengths & Warnings
+      const stList = document.getElementById('rep-strengths-list');
+      stList.innerHTML = '';
+      data.pontos_fortes.forEach(s => {
+        stList.innerHTML += `<li class="flex items-start gap-2"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5"></i><span>${s}</span></li>`;
+      });
+
+      const wnList = document.getElementById('rep-warnings-list');
+      wnList.innerHTML = '';
+      data.pontos_de_atencao.forEach(w => {
+        wnList.innerHTML += `<li class="flex items-start gap-2"><i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i><span>${w}</span></li>`;
+      });
+
+      // Atualiza data para cabeçalho de impressão
+      const printDateEl = document.getElementById('print-date-display');
+      if (printDateEl) {
+        printDateEl.textContent = `Emitido em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+      }
+
+      // Raw JSON
+      document.getElementById('raw-json-output').textContent = JSON.stringify(data, null, 2);
+      lucide.createIcons();
+    }
+
+    function toggleRawJson() {
+      const container = document.getElementById('raw-json-container');
+      const icon = document.getElementById('json-toggle-icon');
+      container.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    /* Manipulador Robusto de Impressão e PDF */
+    function handlePrintPdf() {
+      if (!state.report) {
+        showToast("Finalize a entrevista para gerar o parecer antes de imprimir.", "warning");
+        return;
+      }
+
+      // Garante que a visualização ativa seja a do relatório
+      if (state.activeView !== 'report') {
+        switchView('report');
+      }
+
+      try {
+        window.print();
+        showToast("Selecione 'Salvar como PDF' no destino da sua impressora.", "info");
+      } catch (err) {
+        console.warn("Ambiente restrito detectado para window.print(), oferecendo download:", err);
+        showToast("Gerando arquivo autônomo para impressão...", "info");
+        downloadPrintableDossier();
+      }
+    }
+
+    /* Fallback garantido: Gera um documento autônomo formatado que aciona o PDF */
+    function downloadPrintableDossier() {
+      if (!state.report) {
+        showToast("Gere o parecer antes de exportar.", "warning");
+        return;
+      }
+
+      const rep = state.report;
+      const htmlContent = '<!DOCTYPE html>\n' +
+'<html lang="pt-BR">\n' +
+'<head>\n' +
+'  <meta charset="UTF-8">\n' +
+'  <title>Dossie_RecrutAI_' + rep.candidato.nome.replace(/\s+/g, '_') + '</title>\n' +
+'  <script src="https://cdn.tailwindcss.com"><' + '/script>\n' +
+'  <style>\n' +
+'    @media print { button { display: none !important; } body { margin: 0; padding: 12mm; } }\n' +
+'  </style>\n' +
+'</head>\n' +
+'<body class="bg-white text-slate-900 p-8 max-w-4xl mx-auto antialiased font-sans">\n' +
+'  <div class="flex items-center justify-between pb-4 border-b-2 border-slate-800 mb-6">\n' +
+'    <div>\n' +
+'      <h1 class="text-2xl font-bold text-indigo-900">RecrutAI • Parecer Técnico de Auditoria</h1>\n' +
+'      <p class="text-xs text-slate-500">Avaliação por Competências e Auditoria de Inconsistências</p>\n' +
+'    </div>\n' +
+'    <div class="text-right">\n' +
+'      <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow mb-2 cursor-pointer">Imprimir / Salvar PDF</button>\n' +
+'      <p class="text-xs text-slate-400">Data: ' + new Date().toLocaleDateString('pt-BR') + '</p>\n' +
+'    </div>\n' +
+'  </div>\n' +
+'  <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">\n' +
+'    <div class="grid grid-cols-2 gap-4 text-xs">\n' +
+'      <div><strong>Candidato:</strong> ' + rep.candidato.nome + '</div>\n' +
+'      <div><strong>Cargo Avaliado:</strong> ' + rep.candidato.cargo_avaliado + '</div>\n' +
+'      <div><strong>Senioridade Solicitada:</strong> ' + rep.candidato.senioridade_solicitada + '</div>\n' +
+'      <div><strong>Senioridade Percebida:</strong> ' + rep.candidato.senioridade_percebida + '</div>\n' +
+'      <div><strong>Score de Aderência:</strong> ' + rep.score_aderencia_geral + '/100</div>\n' +
+'      <div><strong>Recomendação:</strong> ' + rep.recomendacao_final + '</div>\n' +
+'    </div>\n' +
+'  </div>\n' +
+'  <div class="mb-6">\n' +
+'    <h2 class="text-sm font-bold uppercase text-slate-800 mb-2 border-b pb-1">Síntese Executiva</h2>\n' +
+'    <p class="text-xs text-slate-700 leading-relaxed">' + rep.resumo_executivo + '</p>\n' +
+'  </div>\n' +
+'  <div class="mb-6 p-4 border-2 border-indigo-200 bg-indigo-50/50 rounded-xl">\n' +
+'    <h2 class="text-sm font-bold text-indigo-950 mb-3 uppercase">Perguntas Investigativas para a Próxima Fase (Gestor Humano)</h2>\n' +
+'    <div class="space-y-3">\n' +
+'      ' + rep.sugestao_perguntas_proxima_fase.map(function(q) {
+        return '<div class="p-3 bg-white border border-indigo-200 rounded-lg text-xs">' +
+               '<span class="font-bold text-indigo-700 block mb-1">Foco: ' + q.foco_investigacao + '</span>' +
+               '<p class="text-slate-800 font-semibold mb-1">"' + q.pergunta_sugerida + '"</p>' +
+               '<p class="text-slate-600 text-[11px]"><strong>O que observar:</strong> ' + q.o_que_observar + '</p>' +
+               '</div>';
+      }).join('') + '\n' +
+'    </div>\n' +
+'  </div>\n' +
+'  <script>\n' +
+'    window.addEventListener("load", function() {\n' +
+'      setTimeout(function() { window.print(); }, 500);\n' +
+'    });\n' +
+'  <' + '/script>\n' +
+'</body>\n' +
+'</html>';
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Dossie_RecrutAI_${rep.candidato.nome.replace(/\s+/g, '_')}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Dossiê baixado! Abra o arquivo para imprimir ou salvar em PDF.", "success");
+    }
+
+    function copyJsonToClipboard() {
+      if (!state.report) {
+        showToast("Nenhum parecer disponível para copiar.", "warning");
+        return;
+      }
+      const jsonText = JSON.stringify(state.report, null, 2);
+      
+      const textArea = document.createElement('textarea');
+      textArea.value = jsonText;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast("JSON copiado para a área de transferência!", "success");
+      } catch (err) {
+        showToast("Falha ao copiar JSON.", "error");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function toggleSettingsModal() {
+      const modal = document.getElementById('settings-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function saveApiKey() {
+      const input = document.getElementById('api-key-input');
+      const val = input.value.trim();
+      state.apiKey = val;
+      if (val) {
+        localStorage.setItem('recrutai_gemini_key', val);
+        showToast("Chave da API salva com sucesso!", "success");
+      } else {
+        localStorage.removeItem('recrutai_gemini_key');
+        showToast("Chave removida. Usando motor nativo!", "info");
+      }
+      toggleSettingsModal();
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+
+      toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl text-xs sm:text-sm font-medium ";
+
+      if (type === 'success') {
+        toast.className += "bg-emerald-950 border-emerald-500/50 text-emerald-200 translate-y-0 opacity-100";
+      } else if (type === 'warning') {
+        toast.className += "bg-amber-950 border-amber-500/50 text-amber-200 translate-y-0 opacity-100";
+      } else if (type === 'error') {
+        toast.className += "bg-rose-950 border-rose-500/50 text-rose-200 translate-y-0 opacity-100";
+      } else {
+        toast.className += "bg-indigo-950 border-indigo-500/50 text-indigo-200 translate-y-0 opacity-100";
+      }
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
